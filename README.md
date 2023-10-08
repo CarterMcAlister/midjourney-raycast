@@ -45,6 +45,8 @@ Once you have this setup, you'll need to add your personal Discord auth token, s
 
 ![Initial set-up](metadata/midjourney-7.png)
 
+> **Note:** This extension is not compliant with the Terms of Service of Discord due to using a user token. Use at your own risk.
+
 > All the preferences value will be stored locally using the [Raycast Preferences API](https://developers.raycast.com/api-reference/preferences)
 
 # Preferences
