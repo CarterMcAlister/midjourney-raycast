@@ -76,6 +76,6 @@
     "dev": "ray develop",
     "fix-lint": "ray lint --fix",
     "lint": "ray lint",
-    "publish": "npx @raycast/api@1.83.0 publish"
+    "publish": "npx @raycast/api@latest publish"
   }
 }
