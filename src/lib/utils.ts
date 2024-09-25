@@ -23,6 +23,7 @@ export function UriToHash(uri: string) {
 }
 
 // taken from https://github.com/erictik/midjourney-api/blob/2cfc7c98349d438f8ffd1f8201b6c76a3ef3b932/src/utils/index.ts
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const formatOptions = (components: any) => {
   let data: MJOptions[] = [];
   for (let i = 0; i < components.length; i++) {
