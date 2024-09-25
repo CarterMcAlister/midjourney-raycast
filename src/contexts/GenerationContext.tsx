@@ -9,7 +9,12 @@ export interface GenerationContextType {
   addGeneration: (newGeneration: Generation) => Generation;
   updateGeneration: (gen: Generation, genData: Partial<Generation>) => void;
   removeGeneration: (gen: Generation) => void;
-  createGeneration: (prompt: string, onGenerationCreated?: (gen: Generation) => void) => Promise<null | undefined>;
+  createGeneration: (
+    prompt: string,
+    onGenerationCreated?: ((gen: Generation) => void) | undefined
+  ) => Promise<{
+    success: boolean;
+  }>;
   createVariation: (
     gen: Generation,
     target: 1 | 2 | 3 | 4,
@@ -66,7 +71,6 @@ export function GenerationContextProvider({ children }: { children: React.ReactN
       updateGeneration(newGen, zoomOut);
     }
 
-    console.log(JSON.stringify(zoomOut));
     return newGen;
   };
 
@@ -148,16 +152,23 @@ export function GenerationContextProvider({ children }: { children: React.ReactN
   };
 
   const createGeneration = async (prompt: string, onGenerationCreated?: (gen: Generation) => void) => {
-    if (!prompt || prompt.length === 0) return null;
+    if (!prompt || prompt.length === 0) return { success: false };
 
     const newGen = addGeneration({ prompt, type: "image", command: "imagine" });
     onGenerationCreated?.(newGen);
 
-    const msg = await client.Imagine(prompt, (uri: string, progress: string) => {
-      updateGeneration(newGen, { uri, progress });
-    });
-    if (msg) {
-      updateGeneration(newGen, msg);
+    try {
+      const msg = await client.Imagine(prompt, (uri: string, progress: string) => {
+        updateGeneration(newGen, { uri, progress });
+      });
+      if (msg) {
+        updateGeneration(newGen, msg);
+        return { success: true };
+      }
+      return { success: false };
+    } catch (e) {
+      updateGeneration(newGen, { progress: "Failed" });
+      return { success: false };
     }
   };
 
