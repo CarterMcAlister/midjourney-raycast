@@ -60,7 +60,7 @@
     "@raycast/api": "^1.59.0",
     "@raycast/utils": "^1.10.0",
     "cross-fetch": "^4.0.0",
-    "midjourney": "^4.3.12",
+    "midjourney": "^4.3.17",
     "run-applescript": "^6.1.0"
   },
   "devDependencies": {

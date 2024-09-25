@@ -8,7 +8,7 @@ export function useGenerationList() {
   const addGeneration = (newGeneration: Partial<Generation> & Pick<Generation, "prompt" | "type" | "command">) => {
     const gen: Generation = {
       ...newGeneration,
-      progress: "Waiting to start...",
+      progress: "Generating...",
       uri: "",
       timestamp: Date.now(),
       guid: generateGUID(),
