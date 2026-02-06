@@ -57,16 +57,16 @@
     }
   ],
   "dependencies": {
-    "@raycast/api": "^1.83.1",
-    "@raycast/utils": "^1.17.0",
+    "@raycast/api": "^1.104.4",
+    "@raycast/utils": "^2.2.2",
     "cross-fetch": "^4.0.0",
-    "midjourney": "^4.3.17",
+    "midjourney": "^4.3.18",
     "run-applescript": "^6.1.0"
   },
   "devDependencies": {
     "@raycast/eslint-config": "1.0.11",
     "@types/node": "18.8.3",
-    "@types/react": "18.0.9",
+    "@types/react": "^19.2.13",
     "eslint": "^7.32.0",
     "prettier": "^2.5.1",
     "typescript": "^4.4.3"
