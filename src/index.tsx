@@ -24,11 +24,13 @@ export default function Main() {
 export function GenerationGrid() {
   const [input, setInput] = useState("");
   const { generations, createGeneration, updateGeneration } = useGenerationContext();
-  const [isError, setIsError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const onGenerate = async () => {
     setInput("");
-    const { success } = await createGeneration(input);
-    setIsError(!success);
+    const result = await createGeneration(input);
+    if (!result.success) {
+      setError(result.error || "Unknown error occurred");
+    }
   };
 
   useRefetchGenerations(generations, (index, message) => {
@@ -39,8 +41,8 @@ export function GenerationGrid() {
     return generations.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   }, [generations]);
 
-  if (isError) {
-    return <ErrorPanel />;
+  if (error) {
+    return <ErrorPanel error={error} />;
   }
 
   return (

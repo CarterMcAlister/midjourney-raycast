@@ -17,18 +17,20 @@ export default function Imagine(props: LaunchProps<{ arguments: { prompt: string
 function ImagineContent({ prompt }: { prompt: string }) {
   const [generationId, setGenerationId] = useState<string | undefined>();
   const { createGeneration } = useGenerationContext();
-  const [isError, setIsError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     createGeneration(prompt, (gen) => {
       setGenerationId(gen.guid);
-    }).then(({ success }) => {
-      setIsError(!success);
+    }).then((result) => {
+      if (!result.success) {
+        setError(result.error || "Unknown error occurred");
+      }
     });
   }, []);
 
-  if (isError) {
-    return <ErrorPanel />;
+  if (error) {
+    return <ErrorPanel error={error} />;
   }
 
   if (!generationId) return null;
