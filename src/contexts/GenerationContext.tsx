@@ -1,7 +1,7 @@
 import { MJOptions } from "midjourney";
 import { createContext, useContext } from "react";
 import { useGenerationList } from "../hooks/useGenerationList";
-import { client } from "../lib/client";
+import { client, validatePreferences } from "../lib/client";
 import { Generation } from "../types";
 
 export interface GenerationContextType {
@@ -14,6 +14,7 @@ export interface GenerationContextType {
     onGenerationCreated?: ((gen: Generation) => void) | undefined
   ) => Promise<{
     success: boolean;
+    error?: string;
   }>;
   createVariation: (
     gen: Generation,
@@ -152,12 +153,24 @@ export function GenerationContextProvider({ children }: { children: React.ReactN
   };
 
   const createGeneration = async (prompt: string, onGenerationCreated?: (gen: Generation) => void) => {
-    if (!prompt || prompt.length === 0) return { success: false };
+    if (!prompt || prompt.length === 0) return { success: false, error: "Prompt cannot be empty" };
+
+    // Validate preferences before attempting to connect
+    const validation = validatePreferences();
+    if (!validation.valid) {
+      return { 
+        success: false, 
+        error: `Configuration error:\n• ${validation.errors.join("\n• ")}\n\nPlease check your extension preferences.`
+      };
+    }
 
     const newGen = addGeneration({ prompt, type: "image", command: "imagine" });
     onGenerationCreated?.(newGen);
 
     try {
+      // Initialize the client connection before generating
+      await client.init();
+      
       const msg = await client.Imagine(prompt, (uri: string, progress: string) => {
         updateGeneration(newGen, { uri, progress });
       });
@@ -165,10 +178,27 @@ export function GenerationContextProvider({ children }: { children: React.ReactN
         updateGeneration(newGen, msg);
         return { success: true };
       }
-      return { success: false };
+      return { success: false, error: "No response received from Midjourney. The bot may be overloaded or your session may have expired." };
     } catch (e) {
+      const errorMessage = e instanceof Error ? e.message : String(e);
+      console.error("Midjourney generation error:", errorMessage);
       updateGeneration(newGen, { progress: "Failed" });
-      return { success: false };
+      
+      // Provide helpful error messages for common issues
+      let userMessage = errorMessage;
+      if (errorMessage.includes("401") || errorMessage.includes("Unauthorized") || errorMessage.includes("invalid session")) {
+        userMessage = "Authentication failed. Your Discord session token is invalid or expired.\n\nTo get a new token:\n1. Open Discord in your browser (not the app)\n2. Press F12 to open Developer Tools\n3. Go to Network tab, filter by 'api'\n4. Click any request and find the 'Authorization' header\n5. Copy that value to extension preferences";
+      } else if (errorMessage.includes("403") || errorMessage.includes("Forbidden")) {
+        userMessage = "Access denied. Make sure:\n• You have access to the specified Discord server\n• The Midjourney bot is in that server\n• You have permission to use the channel";
+      } else if (errorMessage.includes("connect") || errorMessage.includes("WebSocket") || errorMessage.includes("ECONNREFUSED")) {
+        userMessage = "Could not connect to Discord. Please check:\n• Your internet connection\n• Discord is not blocked by firewall\n• Try again in a few moments";
+      } else if (errorMessage.includes("timeout") || errorMessage.includes("ETIMEDOUT")) {
+        userMessage = "Connection timed out. Discord may be slow or your session token may have expired.";
+      } else if (errorMessage.includes("rate limit") || errorMessage.includes("429")) {
+        userMessage = "Rate limited by Discord. Please wait a few minutes before trying again.";
+      }
+      
+      return { success: false, error: userMessage };
     }
   };
 
